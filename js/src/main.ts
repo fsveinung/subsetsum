@@ -35,13 +35,13 @@ async function runAllTests() {
 
 
 function runNext(list: ITestCase[], index = 0) {
+  
   const test = list[index];
+
   const p = new Promise<ITestResult>((resolve) => {
     const startTime = new Date();  
     const result = GetFirstMatch(test.data, test.target);
-    const endTime = new Date();
-    const timeTaken: any = (<any>endTime - <any>startTime);
-    resolve({ case: test, matches: result, time: timeTaken });
+    resolve({ case: test, matches: result, time: (<any>(new Date()) - <any>startTime) });
   });
 
   p.then( (x: ITestResult) => {
@@ -52,6 +52,7 @@ function runNext(list: ITestCase[], index = 0) {
       },50);
     }
   });
+  
 }
 
 function logResult(res: ITestResult) {
@@ -64,7 +65,7 @@ function logRow(items: number, target: number, matches: number[], time: number) 
   tr.appendChild(newElement("td", items));
   tr.appendChild(newElement("td", target));
   tr.appendChild(newElement("td", matches?.join(", "), "datacell"));
-  tr.appendChild(newElement("td", time));
+  tr.appendChild(newElement("td", time + " ms."));
   outlet?.appendChild(tr);
 }
 
