@@ -55,33 +55,29 @@ function runNext(list: ITestCase[], index = 0) {
 }
 
 function logResult(res: ITestResult) {
-  logRow(res.case.data.length, res.case.target, res.matches.length, res.time);
+  logRow(res.case.data.length, res.case.target, res.matches, res.time);
 }
 
-function logRow(items: number, target: number, matches: number, time: number) {
+function logRow(items: number, target: number, matches: number[], time: number) {
   const outlet = document.querySelector<HTMLButtonElement>('#outlet');
   const tr = newElement("tr");
   tr.appendChild(newElement("td", items));
   tr.appendChild(newElement("td", target));
-  tr.appendChild(newElement("td", matches));
+  tr.appendChild(newElement("td", matches?.join(", "), "datacell"));
   tr.appendChild(newElement("td", time));
   outlet?.appendChild(tr);
 }
 
-function newElement(type: string, text: any = undefined ): HTMLElement {
+function newElement(type: string, text: any = undefined, cls = "" ): HTMLElement {
   const el = document.createElement(type);
   if (text || text === 0) {
     el.innerText = text;
   }
+  if (cls) {
+    el.classList.add(cls);
+  }
   return el;
 } 
-
-function logText(comment: string) {
-  const outlet = document.querySelector<HTMLButtonElement>('#outlet');
-  const el = document.createElement("li");
-  el.innerText = comment;
-  outlet?.appendChild(el);
-}
 
 function clear() {
   const outlet = document.querySelector<HTMLButtonElement>('#outlet');
