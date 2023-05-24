@@ -5,22 +5,21 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div>
     <h1>Subset sum problem</h1>
     <div class="card">
-      <button id="run" type="button">Run test</button>
+      <button id="run" type="button" class="c2a">Run test</button>
     </div>
-    <p class="read-the-docs">
-      Click 'Run test' to run the code and check the console for output
-    </p>
     <ul id="outlet">
     </ul>
   </div>
 `
 
 const button = document.querySelector<HTMLButtonElement>('#run');
-button?.addEventListener('click', runAllTests);
+button?.addEventListener('click', async () => await runAllTests());
 
-function runAllTests() {
+async function runAllTests() {
 
-  const testCases = [
+  clear();
+
+  const testCases: ITestCase[] = [
     { data: [2, 3, 5], target: 8 },
     { data: [-2, 3, 6, -1, -2, -3, 5], target: -7},
     { data: [0.35, 0.45, 0.60, 0.1, 0.15, 0.20, 1.4, 0.5, 0.3, 0.8, 2.2, 0.1, 0.7, 0.8 ], target: 7 },
@@ -28,27 +27,33 @@ function runAllTests() {
     hardCase(25, 9999)
   ]
 
-  testCases.forEach(test => {
-    runSingleTest(test.data, test.target);
+  runNext(testCases);
+
+}
+
+
+function runNext(list: ITestCase[], index = 0) {
+  const test = list[index];
+  const p = new Promise<ITestResult>((resolve) => {
+    const startTime = new Date();  
+    const result = GetFirstMatch(test.data, test.target);
+    const endTime = new Date();
+    const timeTaken: any = (<any>endTime - <any>startTime);
+    resolve({ case: test, matches: result, time: timeTaken });
   });
 
+  p.then( (x: ITestResult) => {
+    logResult(x);
+    if (list.length > index + 1) {
+      setTimeout( () => {
+        runNext(list, index+1);
+      },50);
+    }
+  });
 }
 
-function hardCase(items: number, target: number): { data: number[], target: number } {
-  const result: { data: number[], target:  number } = { data: [], target: target };
-  for (let i = 0; i <items; i++) {
-    result.data.push(i + 1);
-  }
-  return result;
-}
-
-function runSingleTest(data: number[], target: number) {
-  logText(`Find match for ${target} in ${data.length} items`);
-  const startTime = new Date();  
-  const result = GetFirstMatch(data, target);
-  const endTime = new Date();
-  logText("Time taken:" + (endTime-startTime));
-  console.table(result);
+function logResult(res: ITestResult) {
+  logText(`${res.case.data.length} items in ${res.time} time`);
 }
 
 function logText(comment: string) {
@@ -56,4 +61,30 @@ function logText(comment: string) {
   const el = document.createElement("li");
   el.innerText = comment;
   outlet?.appendChild(el);
+}
+
+function clear() {
+  const outlet = document.querySelector<HTMLButtonElement>('#outlet');
+  if (outlet) {
+    outlet.innerHTML = "";
+  }
+}
+
+function hardCase(items: number, target: number): ITestCase {
+  const result: ITestCase = { data: [], target: target };
+  for (let i = 0; i <items; i++) {
+    result.data.push(i + 1);
+  }
+  return result;
+}
+
+interface ITestCase {
+  data: number[],
+  target: number
+}
+
+interface ITestResult {
+  case: ITestCase;
+  matches: number[],
+  time: number
 }
