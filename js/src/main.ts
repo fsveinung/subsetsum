@@ -5,15 +5,17 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div>
     <h1>Subset sum problem</h1>
     <div class="card">
-      <button id="run" type="button" class="c2a">Run test</button>
+      <button id="run" type="button" class="c2a">Run tests</button>
     </div>
-    <ul id="outlet">
-    </ul>
+    <table>
+      <thead>
+        <tr><th>Items<th>Target<th>Matches<th>Time</tr>
+      </thead>
+      <tbody id="outlet">
+      </tbody>
+    </table>    
   </div>
 `
-
-const button = document.querySelector<HTMLButtonElement>('#run');
-button?.addEventListener('click', async () => await runAllTests());
 
 async function runAllTests() {
 
@@ -53,8 +55,26 @@ function runNext(list: ITestCase[], index = 0) {
 }
 
 function logResult(res: ITestResult) {
-  logText(`${res.case.data.length} items in ${res.time} time`);
+  logRow(res.case.data.length, res.case.target, res.matches.length, res.time);
 }
+
+function logRow(items: number, target: number, matches: number, time: number) {
+  const outlet = document.querySelector<HTMLButtonElement>('#outlet');
+  const tr = newElement("tr");
+  tr.appendChild(newElement("td", items));
+  tr.appendChild(newElement("td", target));
+  tr.appendChild(newElement("td", matches));
+  tr.appendChild(newElement("td", time));
+  outlet?.appendChild(tr);
+}
+
+function newElement(type: string, text: any = undefined ): HTMLElement {
+  const el = document.createElement(type);
+  if (text || text === 0) {
+    el.innerText = text;
+  }
+  return el;
+} 
 
 function logText(comment: string) {
   const outlet = document.querySelector<HTMLButtonElement>('#outlet');
@@ -88,3 +108,6 @@ interface ITestResult {
   matches: number[],
   time: number
 }
+
+const button = document.querySelector<HTMLButtonElement>('#run');
+button?.addEventListener('click', async () => await runAllTests());

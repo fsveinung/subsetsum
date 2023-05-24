@@ -26,7 +26,7 @@ a:hover {
 body {
   margin: 0;
   display: flex;
-  place-items: center;
+  /* place-items: center; */
   min-width: 320px;
   min-height: 100vh;
 }
@@ -34,6 +34,7 @@ body {
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
+  margin: 0;
 }
 
 #app {
@@ -87,6 +88,10 @@ button:focus-visible {
   background-color: green;
   border-color: white;
   color: white;
+}
+
+table {
+  width: 100%;
 }
 
 @media (prefers-color-scheme: light) {
