@@ -29,14 +29,16 @@ async function runAllTests() {
     hardCase(25, 9999)
   ]
 
-  runNext(testCases);
+  runTests(testCases);
 
 }
 
 
-function runNext(list: ITestCase[], index = 0) {
+function runTests(list: ITestCase[], index = 0) {
   
   const test = list[index];
+
+  setBusy();
 
   const p = new Promise<ITestResult>((resolve) => {
     const startTime = new Date();  
@@ -48,8 +50,10 @@ function runNext(list: ITestCase[], index = 0) {
     logResult(x);
     if (list.length > index + 1) {
       setTimeout( () => {
-        runNext(list, index+1);
+        runTests(list, index+1);
       },50);
+    } else {
+      setBusy(false);
     }
   });
   
@@ -84,6 +88,15 @@ function clear() {
   const outlet = document.querySelector<HTMLButtonElement>('#outlet');
   if (outlet) {
     outlet.innerHTML = "";
+  }
+}
+
+function setBusy(busy = true) {
+  const outlet = document.querySelector<HTMLButtonElement>('#outlet');
+  if (busy) {
+    outlet?.classList.add("spinner");
+  } else {
+    outlet?.classList.remove("spinner");
   }
 }
 

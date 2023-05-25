@@ -26,7 +26,6 @@ a:hover {
 body {
   margin: 0;
   display: flex;
-  /* place-items: center; */
   min-width: 320px;
   min-height: 100vh;
 }
@@ -111,5 +110,28 @@ table {
   }
   button {
     background-color: #f9f9f9;
+  }
+}
+
+.spinner:after {
+  content: " ";
+  /* position: absolute;
+  left: 30px;
+  top: 30px; */
+  display: block;
+  width: 46px;
+  height: 46px;
+  margin: 1px;
+  border-radius: 50%;
+  border: 5px solid #05a100;
+  border-color: #ccc transparent #eee transparent;
+  animation: spinner 1.2s linear infinite;
+}
+@keyframes spinner {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
   }
 }
