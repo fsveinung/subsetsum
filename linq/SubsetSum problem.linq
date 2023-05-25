@@ -2,7 +2,7 @@
 
 void Main()
 {
-	Test(Item.NewSet( 2, 3 ), target: 4 );
+	Test(Item.NewSet( 2, 3 ), target: 5 );
 	Test(Item.NewSet( 2, 3, 5 ), target: 8 );
 	Test(Item.NewSet( 6, -1, -2, -3, 5, 1 ), target: 7);
 	Test(Item.NewSet( -2, 3, 6, -1, -2, -3, 5 ), target: -7);
