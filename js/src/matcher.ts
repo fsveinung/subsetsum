@@ -1,6 +1,9 @@
+
 export function GetFirstMatch(list: number[], target: number): Array<number> {
+
     const comboCount = Math.pow(2, list.length) - 1;
     const absoluteTarget = Math.abs(target);
+
     for (let i = 1; i < comboCount + 1; i++)
     {
         let sum = 0;
@@ -20,7 +23,9 @@ export function GetFirstMatch(list: number[], target: number): Array<number> {
             }
         }
     }
+
     return [];
+
 }
 
 function presign(value: number): number {
