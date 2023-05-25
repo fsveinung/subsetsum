@@ -1,4 +1,4 @@
-# Vite typescript template
+# Based on the Vite typescript template
 
 To build the project:
 - yarn 
