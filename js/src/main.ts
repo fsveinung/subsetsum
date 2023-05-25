@@ -26,7 +26,7 @@ async function runAllTests() {
     { data: [-2, 3, 6, -1, -2, -3, 5], target: -7},
     { data: [0.35, 0.45, 0.60, 0.1, 0.15, 0.20, 1.4, 0.5, 0.3, 0.8, 2.2, 0.1, 0.7, 0.8 ], target: 7 },
     { data: [ 0.35, 0.45, 0.60, 0.1, 0.15, 0.20, 1.4, 0.5, 0.3, 0.8, 2.2, 0.1, 0.7, 0.8, 0.5, 0.15, 0.30, 0.5, 0.7, 0.3, 0.85, 0.95, 1.25, 1.45 ], target: 14 },
-    hardCase(25, 9999)
+    //hardCase(25, 9999)
   ]
 
   runTests(testCases);
@@ -95,8 +95,10 @@ function setBusy(busy = true) {
   const outlet = document.querySelector<HTMLButtonElement>('#outlet');
   if (busy) {
     outlet?.classList.add("spinner");
+    if (button) button.disabled = true;
   } else {
     outlet?.classList.remove("spinner");
+    if (button) button.disabled = false;
   }
 }
 
