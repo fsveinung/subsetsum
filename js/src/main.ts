@@ -26,15 +26,21 @@ async function runAllTests() {
     { data: [-2, 3, 6, -1, -2, -3, 5], target: -7},
     { data: [0.35, 0.45, 0.60, 0.1, 0.15, 0.20, 1.4, 0.5, 0.3, 0.8, 2.2, 0.1, 0.7, 0.8 ], target: 7 },
     { data: [ 0.35, 0.45, 0.60, 0.1, 0.15, 0.20, 1.4, 0.5, 0.3, 0.8, 2.2, 0.1, 0.7, 0.8, 0.5, 0.15, 0.30, 0.5, 0.7, 0.3, 0.85, 0.95, 1.25, 1.45 ], target: 14 },
-    //hardCase(25, 9999)
+    hardCase(50)
   ]
 
   runTests(testCases);
 
 }
 
+async function runTests(list: ITestCase[]) {
+  setBusy();
+  for (const test of list) {
+    // const result = await GetFirstMatch(test.data, test.target);
+  }
+}
 
-function runTests(list: ITestCase[], index = 0) {
+function runTestsEx(list: ITestCase[], index = 0) {
   
   const test = list[index];
 
@@ -102,11 +108,15 @@ function setBusy(busy = true) {
   }
 }
 
-function hardCase(items: number, target: number): ITestCase {
-  const result: ITestCase = { data: [], target: target };
+function hardCase(items: number): ITestCase {
+  const result: ITestCase = { data: [], target: 0 };
+  let sum = 0;
   for (let i = 0; i <items; i++) {
-    result.data.push(i + 1);
+    const value = parseFloat((Math.random() * 2000000).toFixed(2));
+    result.data.push(value);
+    sum += value;
   }
+  result.target = sum;
   return result;
 }
 
