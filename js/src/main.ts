@@ -26,42 +26,51 @@ async function runAllTests() {
     { data: [-2, 3, 6, -1, -2, -3, 5], target: -7},
     { data: [0.35, 0.45, 0.60, 0.1, 0.15, 0.20, 1.4, 0.5, 0.3, 0.8, 2.2, 0.1, 0.7, 0.8 ], target: 7 },
     { data: [ 0.35, 0.45, 0.60, 0.1, 0.15, 0.20, 1.4, 0.5, 0.3, 0.8, 2.2, 0.1, 0.7, 0.8, 0.5, 0.15, 0.30, 0.5, 0.7, 0.3, 0.85, 0.95, 1.25, 1.45 ], target: 14 },
-    hardCase(50)
+    hardCase(25)
   ]
 
-  runTests(testCases);
+  await runTests(testCases);
 
 }
 
-async function runTests(list: ITestCase[]) {
-  setBusy();
-  for (const test of list) {
-    // const result = await GetFirstMatch(test.data, test.target);
-  }
+function firstMatchAsync(test: ITestCase): Promise<ITestResult> {
+  return new Promise<ITestResult>((resolve) => {
+    const startTime = new Date();  
+    const result = GetFirstMatch(test.data, test.target);
+    resolve({ case: test, matches: result, time: (<any>(new Date()) - <any>startTime) });
+  });  
 }
 
-function runTestsEx(list: ITestCase[], index = 0) {
+function pause(ms: number): Promise<boolean> {
+  return new Promise<boolean>((resolve) => {
+    setTimeout(() => {
+      resolve(true);
+    }, ms);
+  })
+}
+
+async function runTests(list: ITestCase[], index = 0) {
   
   const test = list[index];
 
   setBusy();
+  logResult({ case: test, matches: [], time: 0 });
 
-  const p = new Promise<ITestResult>((resolve) => {
-    const startTime = new Date();  
-    const result = GetFirstMatch(test.data, test.target);
-    resolve({ case: test, matches: result, time: (<any>(new Date()) - <any>startTime) });
-  });
+  await pause(50);
 
-  p.then( (x: ITestResult) => {
-    logResult(x);
-    if (list.length > index + 1) {
-      setTimeout( () => {
-        runTests(list, index+1);
-      },50);
-    } else {
-      setBusy(false);
-    }
-  });
+  const x = await firstMatchAsync(test);
+
+  updateLastLog(x.matches, x.time);
+
+  if (list.length > index + 1) {
+
+    await pause(100);
+    await runTests(list, index+1);
+  
+  } else {
+
+    setBusy(false);
+  }
   
 }
 
@@ -70,13 +79,22 @@ function logResult(res: ITestResult) {
 }
 
 function logRow(items: number, target: number, matches: number[], time: number) {
-  const outlet = document.querySelector<HTMLButtonElement>('#outlet');
+  const outlet = document.querySelector<HTMLTableElement>('#outlet');
   const tr = newElement("tr");
   tr.appendChild(newElement("td", items));
-  tr.appendChild(newElement("td", target));
+  tr.appendChild(newElement("td", target.toFixed(2)));
   tr.appendChild(newElement("td", matches?.join(", "), "datacell"));
   tr.appendChild(newElement("td", time + " ms."));
   outlet?.appendChild(tr);
+}
+
+function updateLastLog(matches: number[], time: number) {
+  const outlet = document.querySelector<HTMLElement>('#outlet');
+  if (!outlet) return;
+  const tr = <HTMLTableRowElement>outlet.lastChild;
+  if (!tr) return;
+  tr.cells[2].innerText = matches?.join(", ");
+  tr.cells[3].innerText = time.toFixed(0) + " ms.";
 }
 
 function newElement(type: string, text: any = undefined, cls = "" ): HTMLElement {
