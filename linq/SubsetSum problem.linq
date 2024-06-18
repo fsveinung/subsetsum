@@ -2,23 +2,35 @@
 
 void Main()
 {
-	Test(Item.NewSet( 2, 3 ), target: 5 );
-	Test(Item.NewSet( 2, 3, 5 ), target: 8 );
-	Test(Item.NewSet( 6, -1, -2, -3, 5, 1 ), target: 7);
-	Test(Item.NewSet( -2, 3, 6, -1, -2, -3, 5 ), target: -7);
-	Test(Item.NewSet( 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ), target: 10);	
-	Test(Item.NewSet( 0.35M, 0.45M, 0.60M, 0.1M, 0.15M, 0.20M, 1.4M, 0.5M, 0.3M, 0.8M, 2.2M, 0.1M, 0.7M, 0.8M), target: 7);
-	Test(Item.NewSet( 0.35M, 0.45M, 0.60M, 0.1M, 0.15M, 0.20M, 1.4M, 0.5M, 0.3M, 0.8M, 2.2M, 0.1M, 0.7M, 0.8M, 0.5M, 0.15M, 0.30M, 0.5M, 0.7M, 0.3M, 0.85M, 0.95M, 1.25M, 1.45M), target: 14M);
+
+	RunTest(Generator.CreateTestItems(3));
+	
+	RunTest(Generator.CreateTestItems(6));
+
+	RunTest(Generator.CreateTestItems(12));
+	
+	RunTest(Generator.CreateTestItems(20));
+	
+	RunTest(Generator.CreateTestItems(22));
+	
 }
 
-void Test(IReadOnlyList<Item> numbers, decimal target) {
+void RunTest(TestSet test)
+{
+	var complexity = Math.Pow(2, test.Items.Count) - 1;
+	var msg = $"{complexity:#,##0} combinations";
+	var msg2 = $"Looking for {test.Target:#,##0.00} in {test.Items.Count:#,##0} numbers";
+	msg.Dump(msg2);
 
-	var complexity = Math.Pow(2, numbers.Count) - 1;
-	Console.WriteLine($"{numbers.Count} items = {complexity} combinations");	
-
-	// Find combinations
-	IterativeMatcher.GetFirstMatch(numbers, target).Dump();	
+	var sw = new Stopwatch();
+	sw.Start();
+	var result = IterativeMatcher.GetFirstMatch(test.Items, test.Target);
+	sw.Stop();
+	var output = string.Join(", ", result.Take(100).Select(r => r.Amount));
+	output.Dump($"{sw.Elapsed.Seconds:0.00} sek.");
+	Util.RawHtml("<hr>").Dump();
 }
+
 
 
 public static class IterativeMatcher
@@ -38,7 +50,7 @@ public static class IterativeMatcher
 				if ((i >> j) % 2 != 0)
 				{
 					var absoluteItem = Math.Abs(item.Amount);
-					if (item.Amount.Presign() == target.Presign() && sum + absoluteItem <= absoluteTarget) {
+					if (item.Amount.sigNum() == target.sigNum() && sum + absoluteItem <= absoluteTarget) {
 						sum += absoluteItem;
 						group.Add(item);
 						if (sum == absoluteTarget) 
@@ -50,7 +62,7 @@ public static class IterativeMatcher
 		return null;
 	}
 	
-	public static decimal Presign(this decimal value) {
+	public static decimal sigNum(this decimal value) {
 		return Math.Abs(value) / (value == 0 ? 1 : value);		
 	}
 
@@ -67,4 +79,57 @@ public class Item
 		return values.Select(v => new Item { Amount = v }).ToList();
 	}
 
+}
+
+public class TestSet {
+	public List<Item> Items { get; set; }
+	public decimal Target { get; set; }
+}
+
+static class Generator {
+
+	public static TestSet CreateTestItems(int numberOfItems)
+	{
+		var result = new List<Item>();
+		decimal sum = 0;
+		for (var i = 0; i < numberOfItems; i++)
+		{
+			var dbl = randomStdNormalDistribution(100, 120000, 5);
+			var dec = (decimal)Math.Round(dbl,2);
+			result.Add(new Item { Amount = dec });
+			sum += dec;
+		}
+		return new TestSet { Items = result, Target = sum };
+	}
+
+	public static double randomStdNormalDistribution(double min, double max, int skew)
+	{
+		var rnd = new Random();
+		double u = 0; 
+		double v = 0;
+		while (u == 0) u = rnd.NextDouble();
+		while (v == 0) v = rnd.NextDouble();
+
+		var num = Math.Sqrt(-2.0 * Math.Log(u)) * Math.Cos(2.0 * Math.PI * v);
+
+
+		num = num / 10.0 + 0.5; // Translate to 0 -> 1
+
+		if (num > 1 || num < 0)
+			num = randomStdNormalDistribution(min, max, skew); // resample between 0 and 1 if out of range
+
+
+		else
+		{
+			num = Math.Pow(num, skew); // Skew
+
+		  num = num * (max - min); // Stretch to fill range
+
+		  num += min; // offset to min
+
+		}
+		
+		return num;
+
+	  }
 }
