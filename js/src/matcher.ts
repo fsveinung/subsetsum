@@ -1,5 +1,5 @@
 
-export function GetFirstMatch(list: number[], target: number): Array<number> {
+export function getFirstMatch(list: number[], target: number): Array<number> {
 
     const comboCount = Math.pow(2, list.length) - 1;
     const absoluteTarget = Math.abs(target);
@@ -14,7 +14,7 @@ export function GetFirstMatch(list: number[], target: number): Array<number> {
             if ((i >> j) % 2 != 0)
             {
                 var absoluteItem = Math.abs(item);
-                if (presign(item) == presign(target) && sum + absoluteItem <= absoluteTarget) {
+                if (sigNum(item) == sigNum(target) && sum + absoluteItem <= absoluteTarget) {
                     sum += absoluteItem;
                     group.push(item);
                     if (sum == absoluteTarget) 
@@ -28,7 +28,7 @@ export function GetFirstMatch(list: number[], target: number): Array<number> {
 
 }
 
-function presign(value: number): number {
+function sigNum(value: number): number {
     return Math.abs(value) / (value == 0 ? 1 : value);
 }
 

@@ -1,5 +1,7 @@
 import './style.css'
-import { GetFirstMatch } from './matcher.ts'
+import { getFirstMatch } from './matcher.ts'
+import { ITestCase, ITestResult } from './model.ts';
+import { Data } from './data.ts';
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div>
@@ -24,38 +26,55 @@ async function runAllTests() {
   const testCases: ITestCase[] = [
     { data: [2, 3, 5], target: 8 },
     { data: [-2, 3, 6, -1, -2, -3, 5], target: -7},
-    { data: [0.35, 0.45, 0.60, 0.1, 0.15, 0.20, 1.4, 0.5, 0.3, 0.8, 2.2, 0.1, 0.7, 0.8 ], target: 7 },
-    { data: [ 0.35, 0.45, 0.60, 0.1, 0.15, 0.20, 1.4, 0.5, 0.3, 0.8, 2.2, 0.1, 0.7, 0.8, 0.5, 0.15, 0.30, 0.5, 0.7, 0.3, 0.85, 0.95, 1.25, 1.45 ], target: 14 },
-    //hardCase(25, 9999)
+    Data.createRandomData(10), Data.createRandomData(15),
+    Data.createRandomData(20), 
+    Data.createRandomData(22), 
+    Data.createRandomData(24), 
+    Data.createRandomData(26)
   ]
 
-  runTests(testCases);
+  await runTests(testCases);
 
 }
 
+function firstMatchAsync(test: ITestCase): Promise<ITestResult> {
+  return new Promise<ITestResult>((resolve) => {
+    const startTime = new Date();  
+    const result = getFirstMatch(test.data, test.target);
+    resolve({ case: test, matches: result, time: (<any>(new Date()) - <any>startTime) });
+  });  
+}
 
-function runTests(list: ITestCase[], index = 0) {
+function pause(ms: number): Promise<boolean> {
+  return new Promise<boolean>((resolve) => {
+    setTimeout(() => {
+      resolve(true);
+    }, ms);
+  })
+}
+
+async function runTests(list: ITestCase[], index = 0) {
   
   const test = list[index];
 
+  logResult({ case: test, matches: [], time: 0 });
   setBusy();
 
-  const p = new Promise<ITestResult>((resolve) => {
-    const startTime = new Date();  
-    const result = GetFirstMatch(test.data, test.target);
-    resolve({ case: test, matches: result, time: (<any>(new Date()) - <any>startTime) });
-  });
+  await pause(50);
 
-  p.then( (x: ITestResult) => {
-    logResult(x);
-    if (list.length > index + 1) {
-      setTimeout( () => {
-        runTests(list, index+1);
-      },50);
-    } else {
-      setBusy(false);
-    }
-  });
+  const x = await firstMatchAsync(test);
+
+  updateLastLog(x.matches, x.time);
+
+  if (list.length > index + 1) {
+
+    setTimeout( () => runTests(list, index+1), 50);
+  
+  } else {
+
+    setBusy(false);
+
+  }
   
 }
 
@@ -64,13 +83,23 @@ function logResult(res: ITestResult) {
 }
 
 function logRow(items: number, target: number, matches: number[], time: number) {
-  const outlet = document.querySelector<HTMLButtonElement>('#outlet');
+  const outlet = document.querySelector<HTMLTableElement>('#outlet');
   const tr = newElement("tr");
   tr.appendChild(newElement("td", items));
-  tr.appendChild(newElement("td", target));
+  tr.appendChild(newElement("td", Data.formatDecimal(target)));
   tr.appendChild(newElement("td", matches?.join(", "), "datacell"));
   tr.appendChild(newElement("td", time + " ms."));
   outlet?.appendChild(tr);
+  tr.scrollIntoView();
+}
+
+function updateLastLog(matches: number[], time: number) {
+  const outlet = document.querySelector<HTMLElement>('#outlet');
+  if (!outlet) return;
+  const tr = <HTMLTableRowElement>outlet.lastChild;
+  if (!tr) return;
+  tr.cells[2].innerText = matches.map(v => Data.formatDecimal(v))?.join(", ");
+  tr.cells[3].innerText = time.toFixed(0) + " ms.";
 }
 
 function newElement(type: string, text: any = undefined, cls = "" ): HTMLElement {
@@ -85,41 +114,33 @@ function newElement(type: string, text: any = undefined, cls = "" ): HTMLElement
 } 
 
 function clear() {
-  const outlet = document.querySelector<HTMLButtonElement>('#outlet');
+  const outlet = document.querySelector<HTMLElement>('#outlet');
   if (outlet) {
     outlet.innerHTML = "";
   }
 }
 
 function setBusy(busy = true) {
-  const outlet = document.querySelector<HTMLButtonElement>('#outlet');
+  let target = document.querySelector<HTMLElement>('#outlet tr:last-of-type .datacell');
+  if (!target) {
+    target = document.querySelector<HTMLElement>('#outlet');
+  }
   if (busy) {
-    outlet?.classList.add("spinner");
+    target?.classList.add("spinner");
     if (button) button.disabled = true;
+    if (spinner) spinner.classList.remove("spinner");
+    spinner = target;
   } else {
-    outlet?.classList.remove("spinner");
+    if (spinner != null) { 
+      target = spinner;
+    }
+    target?.classList.remove("spinner");
     if (button) button.disabled = false;
   }
 }
 
-function hardCase(items: number, target: number): ITestCase {
-  const result: ITestCase = { data: [], target: target };
-  for (let i = 0; i <items; i++) {
-    result.data.push(i + 1);
-  }
-  return result;
-}
 
-interface ITestCase {
-  data: number[],
-  target: number
-}
 
-interface ITestResult {
-  case: ITestCase;
-  matches: number[],
-  time: number
-}
-
+let spinner: HTMLElement | null = null;
 const button = document.querySelector<HTMLButtonElement>('#run');
 button?.addEventListener('click', async () => await runAllTests());
