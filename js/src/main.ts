@@ -1,5 +1,7 @@
 import './style.css'
-import { GetFirstMatch } from './matcher.ts'
+import { getFirstMatch } from './matcher.ts'
+import { ITestCase, ITestResult } from './model.ts';
+import { Data } from './data.ts';
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div>
@@ -24,9 +26,11 @@ async function runAllTests() {
   const testCases: ITestCase[] = [
     { data: [2, 3, 5], target: 8 },
     { data: [-2, 3, 6, -1, -2, -3, 5], target: -7},
-    { data: [0.35, 0.45, 0.60, 0.1, 0.15, 0.20, 1.4, 0.5, 0.3, 0.8, 2.2, 0.1, 0.7, 0.8 ], target: 7 },
-    { data: [ 0.35, 0.45, 0.60, 0.1, 0.15, 0.20, 1.4, 0.5, 0.3, 0.8, 2.2, 0.1, 0.7, 0.8, 0.5, 0.15, 0.30, 0.5, 0.7, 0.3, 0.85, 0.95, 1.25, 1.45 ], target: 14 },
-    hardCase(25)
+    Data.createRandomData(10), Data.createRandomData(15),
+    Data.createRandomData(20), 
+    Data.createRandomData(22), 
+    Data.createRandomData(24), 
+    Data.createRandomData(26)
   ]
 
   await runTests(testCases);
@@ -36,7 +40,7 @@ async function runAllTests() {
 function firstMatchAsync(test: ITestCase): Promise<ITestResult> {
   return new Promise<ITestResult>((resolve) => {
     const startTime = new Date();  
-    const result = GetFirstMatch(test.data, test.target);
+    const result = getFirstMatch(test.data, test.target);
     resolve({ case: test, matches: result, time: (<any>(new Date()) - <any>startTime) });
   });  
 }
@@ -53,8 +57,8 @@ async function runTests(list: ITestCase[], index = 0) {
   
   const test = list[index];
 
-  setBusy();
   logResult({ case: test, matches: [], time: 0 });
+  setBusy();
 
   await pause(50);
 
@@ -64,12 +68,12 @@ async function runTests(list: ITestCase[], index = 0) {
 
   if (list.length > index + 1) {
 
-    await pause(100);
-    await runTests(list, index+1);
+    setTimeout( () => runTests(list, index+1), 50);
   
   } else {
 
     setBusy(false);
+
   }
   
 }
@@ -82,10 +86,11 @@ function logRow(items: number, target: number, matches: number[], time: number) 
   const outlet = document.querySelector<HTMLTableElement>('#outlet');
   const tr = newElement("tr");
   tr.appendChild(newElement("td", items));
-  tr.appendChild(newElement("td", target.toFixed(2)));
+  tr.appendChild(newElement("td", Data.formatDecimal(target)));
   tr.appendChild(newElement("td", matches?.join(", "), "datacell"));
   tr.appendChild(newElement("td", time + " ms."));
   outlet?.appendChild(tr);
+  tr.scrollIntoView();
 }
 
 function updateLastLog(matches: number[], time: number) {
@@ -93,7 +98,7 @@ function updateLastLog(matches: number[], time: number) {
   if (!outlet) return;
   const tr = <HTMLTableRowElement>outlet.lastChild;
   if (!tr) return;
-  tr.cells[2].innerText = matches?.join(", ");
+  tr.cells[2].innerText = matches.map(v => Data.formatDecimal(v))?.join(", ");
   tr.cells[3].innerText = time.toFixed(0) + " ms.";
 }
 
@@ -109,45 +114,33 @@ function newElement(type: string, text: any = undefined, cls = "" ): HTMLElement
 } 
 
 function clear() {
-  const outlet = document.querySelector<HTMLButtonElement>('#outlet');
+  const outlet = document.querySelector<HTMLElement>('#outlet');
   if (outlet) {
     outlet.innerHTML = "";
   }
 }
 
 function setBusy(busy = true) {
-  const outlet = document.querySelector<HTMLButtonElement>('#outlet');
+  let target = document.querySelector<HTMLElement>('#outlet tr:last-of-type .datacell');
+  if (!target) {
+    target = document.querySelector<HTMLElement>('#outlet');
+  }
   if (busy) {
-    outlet?.classList.add("spinner");
+    target?.classList.add("spinner");
     if (button) button.disabled = true;
+    if (spinner) spinner.classList.remove("spinner");
+    spinner = target;
   } else {
-    outlet?.classList.remove("spinner");
+    if (spinner != null) { 
+      target = spinner;
+    }
+    target?.classList.remove("spinner");
     if (button) button.disabled = false;
   }
 }
 
-function hardCase(items: number): ITestCase {
-  const result: ITestCase = { data: [], target: 0 };
-  let sum = 0;
-  for (let i = 0; i <items; i++) {
-    const value = parseFloat((Math.random() * 2000000).toFixed(2));
-    result.data.push(value);
-    sum += value;
-  }
-  result.target = sum;
-  return result;
-}
 
-interface ITestCase {
-  data: number[],
-  target: number
-}
 
-interface ITestResult {
-  case: ITestCase;
-  matches: number[],
-  time: number
-}
-
+let spinner: HTMLElement | null = null;
 const button = document.querySelector<HTMLButtonElement>('#run');
 button?.addEventListener('click', async () => await runAllTests());
